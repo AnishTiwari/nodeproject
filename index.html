@@ -1,0 +1,58 @@
+<html>
+<head>
+    <title>Audio</title>
+</head>
+<body>
+    <div>
+            <h2>Audio record</h2>
+            <p>
+                <button id=startRecord>start</button>
+               
+            </p>	
+           
+    </div>
+
+    <script>
+      
+    var audioChunks;
+    z = document.getElementById("startRecord");
+    z.onmousedown = e => {
+    navigator.mediaDevices.getUserMedia({audio:true})
+    .then(stream => {
+       audioChunks=[];
+      rec = new MediaRecorder(stream);
+      rec.ondataavailable = e => {
+         
+        audioChunks.push(e.data);
+        if (rec.state == "inactive"){
+        let blob = new Blob(audioChunks, {type:'audio/wav'});
+        var ws = new WebSocket('ws://localhost:8080');
+        ws.addEventListener('open', () => {
+        
+        let blob = new Blob(audioChunks, {type:'audio/wav'})
+        console.log('Sending:', blob);
+        
+        ws.send(blob);
+        });
+        
+        ws.addEventListener('message', event => {
+        
+        console.log('Received:', event.data);
+        });  
+ 
+    }
+    }
+        rec.start();
+    
+      
+    })
+    .catch(e=>console.log(e));
+}
+z.onmouseup = e => {
+        
+  rec.stop();
+}
+
+    </script>
+    </body>
+    </html>
